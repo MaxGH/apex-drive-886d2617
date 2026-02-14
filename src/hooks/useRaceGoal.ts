@@ -1,7 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/lib/supabase';
+import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
-import type { RaceGoal } from '@/types/supabase';
 import { toast } from 'sonner';
 
 export function useRaceGoal() {
@@ -22,13 +21,12 @@ export function useRaceGoal() {
         .single();
 
       if (error) {
-        // No active race goal is not an error
         if (error.code === 'PGRST116') return null;
         console.error('Error fetching race goal:', error);
         return null;
       }
 
-      return data as RaceGoal;
+      return data;
     },
     enabled: !!user,
   });
@@ -39,28 +37,39 @@ export function useCreateRaceGoal() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (raceGoal: Omit<RaceGoal, 'id' | 'user_id' | 'created_at'>) => {
+    mutationFn: async (raceGoal: {
+      race_name: string;
+      race_date: string;
+      training_start_date: string;
+      race_category?: string | null;
+      sessions_per_week?: number;
+      is_active?: boolean;
+    }) => {
       if (!user) throw new Error('User must be authenticated');
 
-      // Deactivate any existing active race goals
+      // Deactivate existing active race goals
       await supabase
         .from('race_goals')
         .update({ is_active: false })
         .eq('user_id', user.id)
         .eq('is_active', true);
 
-      // Create new race goal
       const { data, error } = await supabase
         .from('race_goals')
         .insert({
           user_id: user.id,
-          ...raceGoal,
+          race_name: raceGoal.race_name,
+          race_date: raceGoal.race_date,
+          training_start_date: raceGoal.training_start_date,
+          race_category: raceGoal.race_category ?? null,
+          sessions_per_week: raceGoal.sessions_per_week ?? 5,
+          is_active: raceGoal.is_active ?? true,
         })
         .select()
         .single();
 
       if (error) throw error;
-      return data as RaceGoal;
+      return data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['race-goal'] });
@@ -77,7 +86,7 @@ export function useUpdateRaceGoal() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({ id, updates }: { id: string; updates: Partial<RaceGoal> }) => {
+    mutationFn: async ({ id, updates }: { id: string; updates: Record<string, any> }) => {
       const { data, error } = await supabase
         .from('race_goals')
         .update(updates)
@@ -86,7 +95,7 @@ export function useUpdateRaceGoal() {
         .single();
 
       if (error) throw error;
-      return data as RaceGoal;
+      return data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['race-goal'] });

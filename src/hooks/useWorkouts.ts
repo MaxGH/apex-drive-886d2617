@@ -1,34 +1,19 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/lib/supabase';
+import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
-import type { WorkoutDB } from '@/types/supabase';
-import type { Workout } from '@/data/workouts';
+import type { Workout, WorkoutExercise } from '@/data/workouts';
 import { toast } from 'sonner';
 
-// Convert DB workout to app Workout format
-function dbToWorkout(dbWorkout: WorkoutDB): Workout {
+// Convert DB row to app Workout format
+function dbToWorkout(row: any): Workout {
   return {
-    id: dbWorkout.id,
-    title: dbWorkout.title,
-    category: dbWorkout.category,
-    intensity: dbWorkout.intensity,
-    duration: dbWorkout.duration,
-    description: dbWorkout.description,
-    exercises: dbWorkout.exercises,
-  };
-}
-
-// Convert app Workout to DB format
-function workoutToDB(workout: Partial<Workout>, userId: string): Partial<WorkoutDB> {
-  return {
-    title: workout.title,
-    category: workout.category,
-    intensity: workout.intensity,
-    duration: workout.duration,
-    description: workout.description,
-    exercises: workout.exercises,
-    created_by: userId,
-    is_template: true,
+    id: row.id,
+    title: row.title,
+    category: row.category,
+    intensity: row.intensity,
+    duration: row.duration,
+    description: row.description ?? '',
+    exercises: (row.exercises ?? []) as WorkoutExercise[],
   };
 }
 
@@ -47,7 +32,7 @@ export function useWorkouts() {
         throw error;
       }
 
-      return (data as WorkoutDB[]).map(dbToWorkout);
+      return (data ?? []).map(dbToWorkout);
     },
   });
 }
@@ -62,12 +47,21 @@ export function useCreateWorkout() {
 
       const { data, error } = await supabase
         .from('workouts')
-        .insert(workoutToDB(workout, user.id))
+        .insert({
+          title: workout.title,
+          category: workout.category,
+          intensity: workout.intensity,
+          duration: workout.duration,
+          description: workout.description,
+          exercises: workout.exercises as any,
+          created_by: user.id,
+          is_template: true,
+        })
         .select()
         .single();
 
       if (error) throw error;
-      return dbToWorkout(data as WorkoutDB);
+      return dbToWorkout(data);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['workouts'] });
@@ -90,13 +84,22 @@ export function useUpdateWorkout() {
 
       const { data, error } = await supabase
         .from('workouts')
-        .update(workoutToDB(workout, user.id))
+        .update({
+          title: workout.title,
+          category: workout.category,
+          intensity: workout.intensity,
+          duration: workout.duration,
+          description: workout.description,
+          exercises: workout.exercises as any,
+          created_by: user.id,
+          is_template: true,
+        })
         .eq('id', workout.id)
         .select()
         .single();
 
       if (error) throw error;
-      return dbToWorkout(data as WorkoutDB);
+      return dbToWorkout(data);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['workouts'] });
