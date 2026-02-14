@@ -14,7 +14,153 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      race_goals: {
+        Row: {
+          created_at: string | null
+          id: string
+          is_active: boolean | null
+          race_category: string | null
+          race_date: string
+          race_name: string
+          sessions_per_week: number | null
+          training_start_date: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          race_category?: string | null
+          race_date: string
+          race_name: string
+          sessions_per_week?: number | null
+          training_start_date: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          race_category?: string | null
+          race_date?: string
+          race_name?: string
+          sessions_per_week?: number | null
+          training_start_date?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      scheduled_workouts: {
+        Row: {
+          completed_at: string | null
+          created_at: string | null
+          id: string
+          is_completed: boolean | null
+          race_goal_id: string
+          scheduled_date: string
+          user_id: string
+          week_number: number | null
+          workout_id: string | null
+        }
+        Insert: {
+          completed_at?: string | null
+          created_at?: string | null
+          id?: string
+          is_completed?: boolean | null
+          race_goal_id: string
+          scheduled_date: string
+          user_id: string
+          week_number?: number | null
+          workout_id?: string | null
+        }
+        Update: {
+          completed_at?: string | null
+          created_at?: string | null
+          id?: string
+          is_completed?: boolean | null
+          race_goal_id?: string
+          scheduled_date?: string
+          user_id?: string
+          week_number?: number | null
+          workout_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "scheduled_workouts_race_goal_id_fkey"
+            columns: ["race_goal_id"]
+            isOneToOne: false
+            referencedRelation: "race_goals"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "scheduled_workouts_workout_id_fkey"
+            columns: ["workout_id"]
+            isOneToOne: false
+            referencedRelation: "workouts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_roles: {
+        Row: {
+          created_at: string | null
+          id: string
+          role: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          role: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          role?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      workouts: {
+        Row: {
+          category: string
+          created_at: string | null
+          created_by: string | null
+          description: string | null
+          duration: number
+          exercises: Json
+          id: string
+          intensity: string
+          is_template: boolean | null
+          title: string
+        }
+        Insert: {
+          category: string
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          duration: number
+          exercises?: Json
+          id?: string
+          intensity: string
+          is_template?: boolean | null
+          title: string
+        }
+        Update: {
+          category?: string
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          duration?: number
+          exercises?: Json
+          id?: string
+          intensity?: string
+          is_template?: boolean | null
+          title?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
