@@ -1,7 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/lib/supabase';
+import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
-import type { UserRole } from '@/types/supabase';
 
 export function useUserRole() {
   const { user } = useAuth();
@@ -22,7 +21,7 @@ export function useUserRole() {
         return null;
       }
 
-      return data as UserRole;
+      return data;
     },
     enabled: !!user,
   });
